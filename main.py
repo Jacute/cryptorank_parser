@@ -55,7 +55,7 @@ def main():
         dct = {}
         for url in urls:
             dct = parse(url, dct)
-        dct['time'] = str(datetime.now().strftime("%d-%m-%Y %H:%M"))
+        dct['time'] = str(datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
         with open("result.json", "w") as write_file:
             json.dump(dct, write_file)
         print('Парсинг успешен! Результаты записаны в result.json')
