@@ -2,6 +2,7 @@ import time
 
 from selenium import webdriver
 from selenium.webdriver import ActionChains
+from selenium.webdriver.common.by import By
 from webdriver_manager.firefox import GeckoDriverManager
 from datetime import datetime
 import sys
@@ -24,11 +25,11 @@ def parse(url, dct):
     try:
         driver.get(url)
         time.sleep(0.5)
-        btn = driver.find_elements_by_class_name('kjJvqN')[1]
+        btn = driver.find_elements(By.CLASS_NAME, 'kjJvqN')[1]
         driver.execute_script("window.scrollTo(0, 222);")
         btn.click()
-        abbr = driver.find_element_by_class_name('coin-info__symbol').text[1:-1]
-        lst = driver.find_elements_by_xpath(f"//th[text()='{abbr}/USDT']")
+        abbr = driver.find_element(By.CLASS_NAME, 'coin-info__symbol').text[1:-1]
+        lst = driver.find_elements(By.XPATH, f"//th[text()='{abbr}/USDT']")
         for i in lst:
             name, course, wallet = i.text.split('\n')
             if name == 'CoinBase ...':
@@ -44,7 +45,8 @@ def parse(url, dct):
             else:
                 dct[wallet] = {**dct[wallet], name: course}
         return dct
-    except Exception:
+    except Exception as e:
+        print(e)
         driver.refresh()
         time.sleep(0.5)
         parse(url, dct)
