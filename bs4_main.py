@@ -69,7 +69,7 @@ def parse(url, dct):
             'user_agent': user_agent
         }
         src = requests.get(url, headers=header).text
-        with open('index.html', 'w', encoding='utf-8') as f:
+        with open('/var/www/html/cryptorank_parser/index.html', 'w', encoding='utf-8') as f:
             f.write(src)
         soup = BeautifulSoup(src, 'lxml')
         abbr = soup.find('span', class_='coin-info__symbol').text[1:-1]
@@ -102,12 +102,12 @@ def main():
         dct = {}
         for url in urls:
             dct = parse(url, dct)
-            time.sleep(0.4 + random())
+            time.sleep(0.25 + random())
         dct['time'] = str(datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
         with open('/var/www/html/cryptorank_parser/result.json', "w") as write_file:
             json.dump(dct, write_file)
         print('Парсинг успешен! Результаты записаны в result.json')
-        time.sleep(2 + random())
+        time.sleep(1 + random())
 
 
 if __name__ == '__main__':
