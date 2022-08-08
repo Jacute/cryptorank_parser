@@ -102,12 +102,12 @@ def main():
         dct = {}
         for url in urls:
             dct = parse(url, dct)
-            time.sleep(0.25 + random())
+            time.sleep(0.4 + random())
         dct['time'] = str(datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
         with open('/var/www/html/cryptorank_parser/result.json', "w") as write_file:
             json.dump(dct, write_file)
         print('Парсинг успешен! Результаты записаны в result.json')
-        time.sleep(1 + random())
+        time.sleep(2 + random())
 
 
 if __name__ == '__main__':
