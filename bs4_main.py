@@ -33,14 +33,6 @@ urls = ['https://cryptorank.io/price/bitcoin/arbitrage',
         'https://cryptorank.io/price/dogecoin/arbitrage']
 
 
-def check_internet():
-    try:
-        subprocess.check_call(["ping", "-c 1", "www.google.ru"])
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-
 def like(string):
     """
     Return a compiled regular expression that matches the given
@@ -76,8 +68,9 @@ def parse(url, dct):
         header = {
             'user_agent': user_agent
         }
-
         src = requests.get(url, headers=header).text
+        with open('index.html', 'w', encoding='utf-8') as f:
+            f.write(src)
         soup = BeautifulSoup(src, 'lxml')
         abbr = soup.find('span', class_='coin-info__symbol').text[1:-1]
         wallet = f'{abbr}/USDT'
@@ -99,13 +92,8 @@ def parse(url, dct):
                 dct[wallet] = {**dct[wallet], name: course}
         return dct
     except Exception:
-        with open('errors.log', 'a') as f:
-            f.write(str(datetime.now().strftime("%d-%m-%Y %H:%M:%S")) + '\n\n' + traceback.format_exc() + '\n\n')
-            if not check_internet():
-                f.write('No internet connection\n\n')
-                time.sleep(30)
-            else:
-                time.sleep(5 + random())
+        print(traceback.format_exc())
+        time.sleep(5 + random())
         parse(url, dct)
 
 
@@ -114,6 +102,7 @@ def main():
         dct = {}
         for url in urls:
             dct = parse(url, dct)
+            time.sleep(0.25 + random())
         dct['time'] = str(datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
         with open('/var/www/html/cryptorank_parser/result.json', "w") as write_file:
             json.dump(dct, write_file)
