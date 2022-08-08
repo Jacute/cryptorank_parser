@@ -1,12 +1,13 @@
+#!/usr/bin/python3.8
 import json
 from datetime import datetime
 
 from bs4 import BeautifulSoup
+import subprocess
 import traceback
 import requests
 import time
 from random import random
-from lxml import etree
 from random_user_agent.user_agent import UserAgent
 from random_user_agent.params import SoftwareName, OperatingSystem
 import re
@@ -30,6 +31,14 @@ urls = ['https://cryptorank.io/price/bitcoin/arbitrage',
         'https://cryptorank.io/price/solana/arbitrage',
         'https://cryptorank.io/price/polkadot/arbitrage',
         'https://cryptorank.io/price/dogecoin/arbitrage']
+
+
+def check_internet():
+    try:
+        subprocess.check_call(["ping", "-c 1", "www.google.ru"])
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
 
 def like(string):
@@ -61,30 +70,52 @@ def find_by_text(soup, text, tag, **kwargs):
     return matches
 
 
+def parse(url, dct):
+    try:
+        user_agent = user_agent_rotator.get_random_user_agent()
+        header = {
+            'user_agent': user_agent
+        }
+
+        src = requests.get(url, headers=header).text
+        soup = BeautifulSoup(src, 'lxml')
+        abbr = soup.find('span', class_='coin-info__symbol').text[1:-1]
+        wallet = f'{abbr}/USDT'
+        lst = find_by_text(soup, wallet, 'th')
+        for i in lst:
+            name = i.split('$ ')[0]
+            course = re.findall(r'\d+\.\d+', i.replace(',', '.'))[0]
+            if name == 'Huobi Glo...':
+                name = 'Huobi Global'
+            elif name == 'Pancake S...':
+                name = 'Pancake Swap'
+            elif name == 'CoinBase ...':
+                name = 'CoinBase Pro'
+            elif name == 'Binance U' or name == 'Binance US':
+                continue
+            if wallet not in dct:
+                dct[wallet] = {name: course}
+            else:
+                dct[wallet] = {**dct[wallet], name: course}
+        return dct
+    except Exception:
+        with open('errors.log', 'a') as f:
+            f.write(str(datetime.now().strftime("%d-%m-%Y %H:%M:%S")) + '\n\n' + traceback.format_exc() + '\n\n')
+            if not check_internet():
+                f.write('No internet connection\n\n')
+                time.sleep(30)
+            else:
+                time.sleep(5 + random())
+        parse(url, dct)
+
+
 def main():
     while True:
         dct = {}
         for url in urls:
-            user_agent = user_agent_rotator.get_random_user_agent()
-            header = {
-                # Сюда помещаем наш user-agent
-                'user_agent': user_agent
-            }
-
-            src = requests.get(url, headers=header).text
-            soup = BeautifulSoup(src, 'lxml')
-            abbr = soup.find('span', class_='coin-info__symbol').text[1:-1]
-            wallet = f'{abbr}/USDT'
-            lst = find_by_text(soup, wallet, 'th')
-            for i in lst:
-                name = i.split('$ ')[0]
-                course = re.findall(r'\d+\.\d+', i.replace(',', '.'))[0]
-                if wallet not in dct:
-                    dct[wallet] = {name: course}
-                else:
-                    dct[wallet] = {**dct[wallet], name: course}
+            dct = parse(url, dct)
         dct['time'] = str(datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
-        with open("result.json", "w") as write_file:
+        with open('/var/www/html/cryptorank_parser/result.json', "w") as write_file:
             json.dump(dct, write_file)
         print('Парсинг успешен! Результаты записаны в result.json')
         time.sleep(1 + random())
