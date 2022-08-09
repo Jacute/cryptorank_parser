@@ -62,56 +62,51 @@ def find_by_text(soup, text, tag, **kwargs):
     return matches
 
 
-def parse(url, dct):
-    try:
-        user_agent = user_agent_rotator.get_random_user_agent()
-        header = {
-            'user_agent': user_agent
-        }
-        src = requests.get(url, headers=header).text
-        with open('/var/www/html/cryptorank_parser/index.html', 'w', encoding='utf-8') as f:
-            f.write(src)
-        soup = BeautifulSoup(src, 'lxml')
-        abbr = soup.find('span', class_='coin-info__symbol').text[1:-1]
-        wallet = f'{abbr}/USDT'
-        lst = find_by_text(soup, wallet, 'th')
-        for i in lst:
-            name = i.split('$ ')[0]
-            course = re.findall(r'\d+\.\d+', i.replace(',', '.'))[0]
-            if name == 'Huobi Glo...':
-                name = 'Huobi Global'
-            elif name == 'Pancake S...':
-                name = 'Pancake Swap'
-            elif name == 'CoinBase ...':
-                name = 'CoinBase Pro'
-            elif name == 'Binance U' or name == 'Binance US':
-                continue
-            if wallet not in dct:
-                dct[wallet] = {name: course}
-            else:
-                dct[wallet] = {**dct[wallet], name: course}
-        return dct
-    except Exception:
-        print(traceback.format_exc())
-        time.sleep(5 + random())
-        parse(url, dct)
-
-
 def main():
-    while True:
-        dct = {}
-        for url in urls:
-            dct = parse(url, dct)
-            time.sleep(0.25 + random())
-        dct['time'] = str(datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
-        with open('/var/www/html/cryptorank_parser/result.json', "w") as write_file:
-            json.dump(dct, write_file)
-        print('Парсинг успешен! Результаты записаны в result.json')
-        time.sleep(1 + random())
+    dct = {}
+    for url in urls:
+        try:
+            user_agent = user_agent_rotator.get_random_user_agent()
+            header = {
+                'user_agent': user_agent
+            }
+            src = requests.get(url, headers=header).text
+            with open('index.html', 'w', encoding='utf-8') as f:
+                f.write(src)
+            soup = BeautifulSoup(src, 'lxml')
+            abbr = soup.find('span', class_='coin-info__symbol').text[1:-1]
+            wallet = f'{abbr}/USDT'
+            lst = find_by_text(soup, wallet, 'th')
+            for i in lst:
+                name = i.split('$ ')[0]
+                course = re.findall(r'\d+\.\d+', i.replace(',', '.'))[0]
+                if name == 'Huobi Glo...':
+                    name = 'Huobi Global'
+                elif name == 'Pancake S...':
+                    name = 'Pancake Swap'
+                elif name == 'CoinBase ...':
+                    name = 'CoinBase Pro'
+                elif name == 'Binance U' or name == 'Binance US':
+                    continue
+                if wallet not in dct:
+                    dct[wallet] = {name: course}
+                else:
+                    dct[wallet] = {**dct[wallet], name: course}
+        except Exception:
+            print('Ошибка! Перезапускаем парсер\n' + traceback.format_exc())
+            time.sleep(5 + random())
+            return 0
+        time.sleep(random())
+    dct['time'] = str(datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
+    with open('result.json', "w") as write_file:
+        json.dump(dct, write_file)
+    print('Парсинг успешен! Результаты записаны в result.json')
+    time.sleep(1 + random())
 
 
 if __name__ == '__main__':
     try:
-        main()
+        while True:
+            main()
     except Exception:
         print('Ошибка!\n', traceback.format_exc())
