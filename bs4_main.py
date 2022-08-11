@@ -32,6 +32,16 @@ urls = ['https://cryptorank.io/price/bitcoin/arbitrage',
         'https://cryptorank.io/price/polkadot/arbitrage',
         'https://cryptorank.io/price/dogecoin/arbitrage']
 
+abbrs = {'https://cryptorank.io/price/bitcoin/arbitrage': 'BTC',
+        'https://cryptorank.io/price/ethereum/arbitrage': 'ETH',
+        'https://cryptorank.io/price/litecoin/arbitrage': 'LTC',
+        'https://cryptorank.io/price/bitcoin-cash/arbitrage': 'BCH',
+        'https://cryptorank.io/price/ripple/arbitrage': 'XRP',
+        'https://cryptorank.io/price/cardano/arbitrage': 'ADA',
+        'https://cryptorank.io/price/solana/arbitrage': 'SOL',
+        'https://cryptorank.io/price/polkadot/arbitrage': 'DOT',
+        'https://cryptorank.io/price/dogecoin/arbitrage': 'DOGE'}
+
 
 def like(string):
     """
@@ -71,32 +81,34 @@ def main():
                 'user_agent': user_agent
             }
             src = requests.get(url, headers=header).text
-            with open('index.html', 'w', encoding='utf-8') as f:
-                f.write(src)
             soup = BeautifulSoup(src, 'lxml')
-            abbr = soup.find('span', class_='coin-info__symbol').text[1:-1]
-            wallet = f'{abbr}/USDT'
+            wallet = abbrs[url] + '/USDT'
             lst = find_by_text(soup, wallet, 'th')
-            for i in lst:
-                name = i.split('$ ')[0]
-                course = re.findall(r'\d+\.\d+', i.replace(',', '.'))[0]
-                if name == 'Huobi Glo...':
-                    name = 'Huobi Global'
-                elif name == 'Pancake S...':
-                    name = 'Pancake Swap'
-                elif name == 'CoinBase ...':
-                    name = 'CoinBase Pro'
-                elif name == 'Binance U' or name == 'Binance US':
-                    continue
-                if wallet not in dct:
-                    dct[wallet] = {name: course}
-                else:
-                    dct[wallet] = {**dct[wallet], name: course}
+            if lst != []:
+                for i in lst:
+                    name = i.split('$ ')[0]
+                    course = re.findall(r'\d+\.\d+', i.replace(',', '.'))[0]
+                    if name == 'Huobi Glo...':
+                        name = 'Huobi Global'
+                    elif name == 'Pancake S...':
+                        name = 'Pancake Swap'
+                    elif name == 'CoinBase ...':
+                        name = 'CoinBase Pro'
+                    elif name == 'Binance U' or name == 'Binance US':
+                        continue
+                    if wallet not in dct:
+                        dct[wallet] = {name: course}
+                    else:
+                        dct[wallet] = {**dct[wallet], name: course}
+            else:
+                with open('index.html', 'w', encoding='utf-8') as f:
+                    f.write(src)
+                dct[wallet] = {}
+            time.sleep(random())
         except Exception:
             print('Ошибка! Перезапускаем парсер\n' + traceback.format_exc())
             time.sleep(5 + random())
             return 0
-        time.sleep(random())
     dct['time'] = str(datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
     with open('result.json', "w") as write_file:
         json.dump(dct, write_file)
