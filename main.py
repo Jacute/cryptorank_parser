@@ -39,10 +39,14 @@ while True:
                     if name == 'ZB.COM':
                         continue
                     course = i['usdLast']
-                    if course[:2] == '0.':
-                        course = round(course, 4)
-                    else:
+                    if wallet in ['BTC/USDT', 'ETH/USDT']:
                         course = int(course)
+                    elif wallet in ['LTC/USDT', 'BCH/USDT', 'SOL/USDT', 'DOT/USDT']:
+                        course = round(course, 2)
+                    elif wallet in ['XRP/USDT', 'ADA/USDT']:
+                        course = round(course, 3)
+                    elif wallet in ['DOGE/USDT']:
+                        course = round(course, 4)
                     if wallet not in dct:
                         dct[wallet] = {name: course}
                     else:
