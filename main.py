@@ -36,7 +36,13 @@ while True:
                 if i['symbol'] == abbrs[url]:
                     wallet = i['symbol']
                     name = i['exchangeName']
+                    if name == 'ZB.COM':
+                        continue
                     course = i['usdLast']
+                    if course[:2] == '0.':
+                        course = round(course, 4)
+                    else:
+                        course = int(course)
                     if wallet not in dct:
                         dct[wallet] = {name: course}
                     else:
