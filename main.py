@@ -36,7 +36,9 @@ while True:
                 if i['symbol'] == abbrs[url]:
                     wallet = i['symbol']
                     name = i['exchangeName']
-                    if name == 'ZB.COM':
+                    if name in ['ZB.COM', 'Bgogo', 'Indodax', 'VinDAX', 'CoinEgg', 'CREX24', 'BW.com', 'AscendEX',
+                                'OceanEx', 'Stex', 'BigONE', 'Cryptology', 'BitMart', 'Lbank', 'Coinsbit',
+                                'Probit', 'CoinTiger']:
                         continue
                     course = i['usdLast']
                     if wallet in ['BTC/USDT', 'ETH/USDT']:
